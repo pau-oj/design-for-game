@@ -2,217 +2,186 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Mapa Que No Se Ve - Entrega Maestría</title>
-    
+    <title>Mapa Sensorial - Casa de Muñecas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Quicksand:wght@500;700&display=swap');
-
-        :root {
-            --rosa-vivo: #D02090;
-            --rosa-claro: #FFF0F5;
-            --rosa-borde: #FF69B4;
-        }
-
-        body, html {
-            margin: 0; padding: 0; overflow: hidden;
-            background-color: var(--rosa-claro);
-            font-family: 'Quicksand', sans-serif;
-        }
-
-        /* Botón Regresar estilo Sticker */
+        
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #FFF0F5; font-family: 'Quicksand', sans-serif; }
+        
+        /* Botón de navegación */
         #btn-regresar {
-            position: absolute;
-            top: 20px; left: 20px;
-            padding: 10px 25px;
-            background-color: var(--rosa-borde);
-            color: white;
-            border: 3px solid white;
-            border-radius: 50px;
-            font-family: 'Bubblegum Sans', cursive;
-            font-size: 1.1rem;
-            cursor: pointer;
-            z-index: 1000;
-            display: none;
+            position: absolute; top: 20px; left: 20px; padding: 12px 25px;
+            background: #FF69B4; color: white; border: 3px solid white;
+            border-radius: 50px; font-family: 'Bubblegum Sans', cursive;
+            font-size: 1.1rem; cursor: pointer; z-index: 1000; display: none;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-
-        /* Tarjetas de texto del Brief flotantes */
-        .card-brief {
-            position: absolute;
-            background: white;
-            border: 2px dashed var(--rosa-borde);
-            border-radius: 15px;
-            padding: 12px;
-            width: 180px;
-            font-size: 0.8rem;
-            color: var(--rosa-vivo);
-            pointer-events: none;
-            display: none;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
-        }
-
-        #canvas-container {
-            width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-        }
+        #btn-regresar:hover { background: #D02090; }
     </style>
 </head>
 <body>
 
     <button id="btn-regresar" onclick="irAlMenu()">← REGRESAR A LA CASA</button>
 
-    <div id="info-emocion" class="card-brief" style="top: 15%; right: 5%;">
-        <b>EMOCIÓN:</b> Curiosidad expansiva, destellos y colores vivos como el rosa[cite: 33].
-    </div>
-    <div id="info-refugio" class="card-brief" style="bottom: 15%; right: 5%;">
-        <b>REFUGIO:</b> Un mundo de imaginación jugando con muñecas y pinturas[cite: 34].
-    </div>
-    <div id="info-poder" class="card-brief" style="top: 20%; left: 5%;">
-        <b>PODER:</b> El sentimiento de ser princesa como un escudo de confianza[cite: 32].
-    </div>
-
-    <div id="canvas-container"></div>
-
     <script>
-        let estado = 0; // 0: Fachada, 1: Interior, 2: Emoción, 3: Refugio, 4: Poder
-        let imgFachada, imgInterior, imgTe, imgFotoNina, imgTramaPoder;
+        let estado = 0; // 0:Fachada, 1:Interior, 2:Emoción, 3:Refugio, 4:Poder
         let cartas = [];
-
-        function preload() {
-            // Asegúrate de que los nombres de archivo sean exactos
-            imgFachada = loadImage('casa_con_mono.png'); // Boceto con moño 
-            imgInterior = loadImage('casa_abierta.png'); // Boceto interior 
-            imgTe = loadImage('indian_tea.png'); // Imagen de la lata de té [cite: 46]
-            imgFotoNina = loadImage('foto_ninez.jpg'); // Tu foto de niña
-            imgTramaPoder = loadImage('trama_poder.png'); // Dibujo de texturas 
-        }
+        let rastroPoder = [];
 
         function setup() {
-            let canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('canvas-container');
-            
-            // Generar cartas de "Emoción" [cite: 38, 39]
-            for(let i=0; i<6; i++) {
+            createCanvas(windowWidth, windowHeight);
+            // Generar posiciones para las cartas de "Emoción" [cite: 38-45]
+            for(let i=0; i<8; i++) {
                 cartas.push({
                     x: random(width*0.2, width*0.8),
                     y: random(height*0.2, height*0.8),
-                    txt: i%2==0 ? "Carta A mi yo de 10" : "Carta DE mi yo de 10",
-                    rot: random(-0.2, 0.2)
+                    rot: random(-0.3, 0.3),
+                    tipo: i % 2 == 0 ? "A mi yo de 10" : "De mi yo de 10"
                 });
             }
         }
 
         function draw() {
             background(255, 240, 245);
-            imageMode(CENTER);
-
+            
             if (estado === 0) {
-                // FACHADA 
-                image(imgFachada, width/2, height/2, 600, 450);
-                drawBotonAbreme();
+                dibujarFachada();
             } else if (estado === 1) {
-                // INTERIOR (MENÚ) 
-                image(imgInterior, width/2, height/2, width*0.8, height*0.8);
+                dibujarInterior();
             } else if (estado === 2) {
-                // JUEGO: EMOCIÓN [cite: 33, 38]
-                drawEmocion();
+                pagEmocion();
             } else if (estado === 3) {
-                // JUEGO: REFUGIO [cite: 34, 48]
-                drawRefugio();
+                pagRefugio();
             } else if (estado === 4) {
-                // JUEGO: PODER [cite: 32, 53]
-                drawPoder();
+                pagPoder();
             }
         }
 
-        function drawBotonAbreme() {
-            fill(139, 69, 19); // Marrón moño 
+        // --- ESTADO 0: FACHADA (Basado en Boceto pág 1) ---
+        function dibujarFachada() {
             rectMode(CENTER);
-            noStroke();
-            rect(width/2, height/2 + 25, 120, 45, 10);
-            fill(255);
-            textAlign(CENTER, CENTER);
-            textSize(18);
-            text("ábreme", width/2, height/2 + 25);
+            // Casa
+            fill(255); stroke(255, 105, 180); strokeWeight(5);
+            rect(width/2, height/2 + 50, 450, 350, 10);
+            // Techo
+            fill(255, 182, 193);
+            triangle(width/2 - 250, height/2 - 125, width/2 + 250, height/2 - 125, width/2, height/2 - 280);
+            
+            // El gran moño central [cite: 31]
+            fill(208, 32, 144); noStroke();
+            triangle(width/2, height/2, width/2 - 90, height/2 - 60, width/2 - 90, height/2 + 60);
+            triangle(width/2, height/2, width/2 + 90, height/2 - 60, width/2 + 90, height/2 + 60);
+            ellipse(width/2, height/2, 50, 50);
+
+            // Botón ábreme
+            fill(139, 69, 19); rect(width/2, height/2 + 30, 120, 45, 15);
+            fill(255); textAlign(CENTER, CENTER); textSize(20); text("abreme", width/2, height/2 + 30);
         }
 
-        function drawEmocion() {
+        // --- ESTADO 1: INTERIOR (Basado en Boceto pág 2) ---
+        function dibujarInterior() {
+            let w = width * 0.8; let h = height * 0.7;
+            fill(255, 255, 255, 220); stroke(255, 105, 180); strokeWeight(3);
+            rect(width/2, height/2, w, h, 20);
+            
+            // Divisiones de habitaciones
+            line(width/2 - w/6, height/2 - h/2, width/2 - w/6, height/2 + h/2);
+            line(width/2 + w/6, height/2 - h/2, width/2 + w/6, height/2 + h/2);
+
+            // Títulos de zonas [cite: 32, 33, 34]
+            textAlign(CENTER); fill(208, 32, 144); textSize(26);
+            text("PODER", width/2 - w/3, height/2 - h/3);
+            text("EMOCIÓN", width/2, height/2 - h/3);
+            text("REFUGIO", width/2 + w/3, height/2 - h/3);
+            
+            // Iconos decorativos simples
+            dibujarIcono(width/2 - w/3, height/2, "✨");
+            dibujarIcono(width/2, height/2, "✉️");
+            dibujarIcono(width/2 + w/3, height/2, "☕");
+        }
+
+        function dibujarIcono(x, y, emoji) {
+            fill(255, 192, 203, 100); noStroke();
+            ellipse(x, y, 100, 100);
+            textSize(40); text(emoji, x, y);
+        }
+
+        // --- ESTADO 2: EMOCIÓN (Cartas - Boceto pág 3) ---
+        function dibujarEmocion() {
             background(255);
-            textAlign(CENTER);
-            fill(208, 32, 144);
-            textSize(24);
-            text("Explora tus cartas", width/2, 50);
+            fill(208, 32, 144); textAlign(CENTER); textSize(22);
+            text("Cartas de/a mi yo de 10 años", width/2, 60);
             
             for(let c of cartas) {
-                push();
-                translate(c.x, c.y);
-                rotate(c.rot);
-                fill(255);
-                stroke(255, 105, 180);
-                rect(0, 0, 140, 90, 5);
-                fill(50);
-                textSize(10);
-                text(c.txt, 70, 45);
+                push(); translate(c.x, c.y); rotate(c.rot);
+                fill(255); stroke(255, 182, 193); strokeWeight(2);
+                rect(0, 0, 140, 100, 5);
+                fill(100); textSize(11); text(c.tipo, 70, 50);
                 pop();
             }
         }
 
-        function drawRefugio() {
+        // --- ESTADO 3: REFUGIO (Tea Party - Boceto pág 4) ---
+        function dibujarRefugio() {
             background(250, 240, 230);
-            image(imgTe, width/2, height/2, 250, 250); // Indian Tea [cite: 46]
-            fill(208, 32, 144);
-            textSize(22);
+            // Lata de Té "Indian Tea" [cite: 46]
+            fill(255, 192, 203); stroke(208, 32, 144);
+            rect(width/2, height/2 - 20, 180, 220, 10);
+            fill(255); noStroke(); textAlign(CENTER); textSize(20);
+            text("INDIAN\nTEA", width/2, height/2 - 20);
+            
+            // Tazas y platos abstractos
+            fill(255); stroke(208, 32, 144);
+            ellipse(width/2 - 200, height/2 + 100, 100, 60); // Plato
+            rect(width/2 - 200, height/2 + 80, 60, 40, 5);  // Taza
+            
+            ellipse(width/2 + 200, height/2 + 100, 100, 60);
+            rect(width/2 + 200, height/2 + 80, 60, 40, 5);
+            
+            fill(208, 32, 144); noStroke();
             text("Arma tu fiesta del té", width/2, height - 60);
         }
 
-        function drawPoder() {
-            // Mapeo sensorial de texturas [cite: 22, 53]
-            image(imgFotoNina, width/2, height/2, 500, 400);
-            if (!mouseIsPressed) {
-                background(200, 230, 200, 240); // Capa verde boceto 
-                fill(0);
-                text("Revela tu poder con círculos", width/2, 50);
+        // --- ESTADO 4: PODER (Texturas - Boceto pág 5) ---
+        function dibujarPoder() {
+            background(220, 240, 220); // Tono verde del boceto
+            fill(0, 150); textAlign(CENTER); 
+            text("Frota para revelar tu poder (el escudo de princesa)", width/2, 50);
+            
+            // Dibujar el rastro sensorial [cite: 52, 53]
+            for(let p of rastroPoder) {
+                fill(p.c); noStroke();
+                ellipse(p.x, p.y, p.s);
             }
-            if (mouseIsPressed) {
-                image(imgTramaPoder, mouseX, mouseY, 120, 120);
+            if(mouseIsPressed) {
+                rastroPoder.push({
+                    x: mouseX, y: mouseY, 
+                    s: random(20, 60), 
+                    c: color(random(150,255), 255, random(150,255), 100)
+                });
             }
         }
 
+        // --- INTERACCIONES ---
         function mousePressed() {
             if (estado === 0) {
-                // Clic en "ábreme"
-                if (dist(mouseX, mouseY, width/2, height/2 + 25) < 60) {
+                // Clic en botón "abreme"
+                if (dist(mouseX, mouseY, width/2, height/2 + 30) < 60) {
                     estado = 1;
-                    toggleCards(true);
                 }
             } else if (estado === 1) {
-                // Selección de habitaciones según posición horizontal
-                if (mouseX < width * 0.33) estado = 2; 
-                else if (mouseX < width * 0.66) estado = 3;
-                else estado = 4;
-                
-                if (estado > 1) {
-                    toggleCards(false);
-                    document.getElementById('btn-regresar').style.display = 'block';
-                }
+                // Selección de habitación
+                if (mouseX < width * 0.4) { estado = 4; }
+                else if (mouseX < width * 0.6) { estado = 2; }
+                else { estado = 3; }
+                document.getElementById('btn-regresar').style.display = 'block';
             }
         }
 
         function irAlMenu() {
             estado = 1;
-            toggleCards(true);
             document.getElementById('btn-regresar').style.display = 'none';
-        }
-
-        function toggleCards(visible) {
-            let display = visible ? 'block' : 'none';
-            document.getElementById('info-emocion').style.display = display;
-            document.getElementById('info-refugio').style.display = display;
-            document.getElementById('info-poder').style.display = display;
         }
 
         function windowResized() {
